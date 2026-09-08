@@ -1,59 +1,42 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { Meal, MealFormData, DietStats } from '@/types/meal';
-
-const STORAGE_KEY = 'daily-diet-meals';
-
-const loadMeals = (): Meal[] => {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    return stored ? JSON.parse(stored) : [];
-  } catch {
-    return [];
-  }
-};
-
-const saveMeals = (meals: Meal[]) => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(meals));
-};
+import { mealsApi } from '@/lib/api';
 
 export const useMeals = () => {
-  const [meals, setMeals] = useState<Meal[]>(loadMeals);
+  const [meals, setMeals] = useState<Meal[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const addMeal = useCallback((data: MealFormData) => {
-    const newMeal: Meal = {
-      id: crypto.randomUUID(),
-      ...data,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    
-    setMeals((prev) => {
-      const updated = [newMeal, ...prev];
-      saveMeals(updated);
-      return updated;
-    });
-    
-    return newMeal;
+  const fetchMeals = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await mealsApi.list();
+      setMeals(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao carregar refeições');
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
-  const updateMeal = useCallback((id: string, data: MealFormData) => {
-    setMeals((prev) => {
-      const updated = prev.map((meal) =>
-        meal.id === id
-          ? { ...meal, ...data, updatedAt: new Date().toISOString() }
-          : meal
-      );
-      saveMeals(updated);
-      return updated;
-    });
-  }, []);
+  useEffect(() => {
+    fetchMeals();
+  }, [fetchMeals]);
 
-  const deleteMeal = useCallback((id: string) => {
-    setMeals((prev) => {
-      const updated = prev.filter((meal) => meal.id !== id);
-      saveMeals(updated);
-      return updated;
-    });
+  const addMeal = useCallback(async (data: MealFormData) => {
+    await mealsApi.create(data);
+    await fetchMeals();
+  }, [fetchMeals]);
+
+  const updateMeal = useCallback(async (id: string, data: MealFormData) => {
+    await mealsApi.update(id, data);
+    await fetchMeals();
+  }, [fetchMeals]);
+
+  const deleteMeal = useCallback(async (id: string) => {
+    await mealsApi.remove(id);
+    setMeals((prev) => prev.filter((meal) => meal.id !== id));
   }, []);
 
   const getMeal = useCallback((id: string) => {
@@ -101,6 +84,9 @@ export const useMeals = () => {
   return {
     meals: sortedMeals,
     stats,
+    isLoading,
+    error,
+    refetch: fetchMeals,
     addMeal,
     updateMeal,
     deleteMeal,

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Plus } from 'lucide-react';
+import { Loader2, Plus, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { Header } from '@/components/Header';
 import { StatsCard } from '@/components/StatsCard';
@@ -14,7 +14,7 @@ import { useMeals } from '@/hooks/useMeals';
 import { Meal, MealFormData } from '@/types/meal';
 
 const Index = () => {
-  const { meals, stats, addMeal, updateMeal, deleteMeal } = useMeals();
+  const { meals, stats, isLoading, error, refetch, addMeal, updateMeal, deleteMeal } = useMeals();
   
   const [formOpen, setFormOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
@@ -42,21 +42,30 @@ const Index = () => {
     setDeleteOpen(true);
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (mealToDelete) {
-      deleteMeal(mealToDelete);
-      toast.success('Refeição excluída com sucesso!');
-      setMealToDelete(null);
+      try {
+        await deleteMeal(mealToDelete);
+        toast.success('Refeição excluída com sucesso!');
+      } catch {
+        toast.error('Erro ao excluir refeição. Tente novamente.');
+      } finally {
+        setMealToDelete(null);
+      }
     }
   };
 
-  const handleSubmit = (data: MealFormData) => {
-    if (selectedMeal) {
-      updateMeal(selectedMeal.id, data);
-      toast.success('Refeição atualizada com sucesso!');
-    } else {
-      addMeal(data);
-      toast.success('Refeição cadastrada com sucesso!');
+  const handleSubmit = async (data: MealFormData) => {
+    try {
+      if (selectedMeal) {
+        await updateMeal(selectedMeal.id, data);
+        toast.success('Refeição atualizada com sucesso!');
+      } else {
+        await addMeal(data);
+        toast.success('Refeição cadastrada com sucesso!');
+      }
+    } catch {
+      toast.error('Erro ao salvar refeição. Tente novamente.');
     }
   };
 
@@ -81,7 +90,19 @@ const Index = () => {
             </Button>
           </div>
 
-          {meals.length === 0 ? (
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : error ? (
+            <div className="flex flex-col items-center gap-4 py-12 text-center">
+              <p className="text-sm text-muted-foreground">{error}</p>
+              <Button variant="outline" size="sm" onClick={refetch}>
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Tentar novamente
+              </Button>
+            </div>
+          ) : meals.length === 0 ? (
             <EmptyState onAddMeal={handleAddMeal} />
           ) : (
             <div className="space-y-3">

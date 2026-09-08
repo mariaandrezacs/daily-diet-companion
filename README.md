@@ -1,73 +1,83 @@
-# Welcome to your Lovable project
+# Daily Diet Companion
 
-## Project info
+Aplicação web para registrar e acompanhar refeições, marcando se estão dentro ou fora da dieta, com estatísticas de adesão (percentual na dieta, melhor sequência, totais).
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Tecnologias
 
-## How can I edit this code?
+- **Vite** + **React 18** + **TypeScript**
+- **shadcn/ui** (Radix UI) + **Tailwind CSS**
+- **React Router** v6, **TanStack Query**, **Framer Motion**
+- **react-hook-form** + **zod** (formulários)
+- **Vitest** + Testing Library (testes)
 
-There are several ways of editing your application.
+## Backend
 
-**Use Lovable**
+O frontend consome uma API REST externa (deploy no Render). Endpoints utilizados:
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| GET | `/refeicoes` | Lista todas as refeições |
+| GET | `/refeicoes/<id>` | Detalhe de uma refeição |
+| POST | `/refeicoes` | Registra uma refeição |
+| PUT | `/refeicoes/<id>` | Edita uma refeição |
+| DELETE | `/refeicoes/<id>` | Exclui uma refeição |
 
-Changes made via Lovable will be committed automatically to this repo.
+Contrato da API (snake_case):
 
-**Use your preferred IDE**
+```json
+{
+  "id": 1,
+  "name": "Omelete de Espinafre",
+  "description": "Omelete com espinafre e queijo branco",
+  "date_time": "2025-03-03 08:00:00",
+  "in_diet": true
+}
+```
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+A conversão para os tipos do frontend (`Meal`/`MealFormData`) é feita em `src/lib/api.ts`.
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## Configuração
 
-Follow these steps:
+Copie `.env.example` para `.env` e ajuste a URL da API:
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+cp .env.example .env
+```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+```env
+VITE_API_URL=https://sua-api.com
+```
 
-# Step 3: Install the necessary dependencies.
-npm i
+- **Desenvolvimento**: o app chama `/api`, que o dev server do Vite faz proxy para `VITE_API_URL` — evita problemas de CORS.
+- **Produção**: o app chama `VITE_API_URL` diretamente — a API precisa ter CORS habilitado.
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+## Como rodar
+
+```sh
+npm install
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+O app sobe em `http://localhost:8080`.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Scripts
 
-**Use GitHub Codespaces**
+| Comando | Descrição |
+|---------|-----------|
+| `npm run dev` | Dev server com HMR |
+| `npm run build` | Build de produção |
+| `npm run preview` | Preview do build |
+| `npm run test` | Testes (Vitest) |
+| `npm run lint` | ESLint |
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Estrutura
 
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+```
+src/
+├── components/     # Componentes da UI (Header, MealCard, dialogs, ui/)
+├── hooks/          # useMeals (estado + chamadas à API)
+├── lib/            # api.ts (cliente HTTP + mapeamento de tipos)
+├── pages/          # Index, NotFound
+├── types/          # Meal, MealFormData, DietStats
+└── test/           # Testes
+```

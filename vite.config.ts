@@ -7,7 +7,7 @@ import { componentTagger } from "lovable-tagger";
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, __dirname, "");
   const apiTarget =
-    env.VITE_API_URL || "https://daily-diet-api-vuht.onrender.com";
+    env.VITE_API_URL || "https://api-backend.com";
 
   return {
     server: {

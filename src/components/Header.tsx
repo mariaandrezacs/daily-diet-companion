@@ -1,7 +1,11 @@
 import { motion } from 'framer-motion';
-import { Salad } from 'lucide-react';
+import { LogOut, Salad } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useAuth } from '@/hooks/useAuth';
 
 export const Header = () => {
+  const { isAuthenticated, logout } = useAuth();
+
   return (
     <motion.header
       initial={{ opacity: 0, y: -20 }}
@@ -18,6 +22,18 @@ export const Header = () => {
             <p className="text-xs text-muted-foreground">Controle sua alimentação</p>
           </div>
         </div>
+
+        {isAuthenticated && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="ml-auto"
+            onClick={logout}
+            aria-label="Sair"
+          >
+            <LogOut className="h-5 w-5" />
+          </Button>
+        )}
       </div>
     </motion.header>
   );

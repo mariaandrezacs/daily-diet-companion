@@ -1,10 +1,5 @@
+import { authStorage, API_BASE_URL } from '@/lib/auth';
 import { Meal, MealFormData } from '@/types/meal';
-
-// Em desenvolvimento, sempre usa o proxy do Vite (/api -> VITE_API_URL) para evitar CORS.
-// Em produção (build), chama VITE_API_URL diretamente — a API precisa liberar CORS.
-const API_BASE_URL = import.meta.env.DEV
-  ? '/api'
-  : (import.meta.env.VITE_API_URL ?? '');
 
 interface ApiMeal {
   id: number;
@@ -43,9 +38,14 @@ const toApiPayload = (data: MealFormData) => ({
 });
 
 const request = async <T>(path: string, init?: RequestInit): Promise<T> => {
+  const token = authStorage.getToken();
   const response = await fetch(`${API_BASE_URL}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
     ...init,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...init?.headers,
+    },
   });
 
   if (!response.ok) {
